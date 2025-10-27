@@ -1,0 +1,44 @@
+using AugmentedScribe.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Identity;
+
+namespace AugmentedScribe;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddPresentationServices(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddControllers();
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen(); // (Vamos configurar o Swagger para JWT depois)
+        
+        services.AddIdentity<IdentityUser, IdentityRole>(options =>
+            {
+                options.Password.RequireDigit = false;
+                options.Password.RequiredLength = 6;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireLowercase = false;
+                options.SignIn.RequireConfirmedAccount = false;
+            })
+            .AddEntityFrameworkStores<ScribeDbContext>()
+            .AddDefaultTokenProviders();
+
+        // 3. Adiciona o CORS (Permitindo o React)
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowReactApp", policy =>
+            {
+                policy.WithOrigins("http://localhost:3000") // URL React
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+        });
+
+        // 4. Adiciona Autenticação JWT (Vamos configurar na Fatia 1)
+        // services.AddAuthentication(...) 
+
+        return services;
+    }
+}

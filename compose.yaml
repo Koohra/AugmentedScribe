@@ -1,0 +1,40 @@
+﻿version: '3.8'
+
+services:
+  postgres-db:
+    image: postgres:16
+    container_name: scribe-postgres-db
+    environment:
+      POSTGRES_DB: augmented_scribe_db
+      POSTGRES_USER: scribe_admin
+      POSTGRES_PASSWORD: password_segura_123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+  
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: scribe-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@cribe.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres-db
+    restart: unless-stopped
+  
+  chromadb:
+    image: chromadb/chroma
+    container_name: augmented_scribe_chroma
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    restart: unless-stopped
+
+volumes:
+  postgres-data: { }
+  chroma_data: { }
