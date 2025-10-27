@@ -1,6 +1,6 @@
-using AugmentedScribe.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Identity;
-using Scalar.AspNetCore;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AugmentedScribe;
 
@@ -24,9 +24,29 @@ public static class DependencyInjection
                     .AllowAnyMethod();
             });
         });
+        
+        services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = configuration["JwtSettings:Issuer"],
 
-        // 4. Adiciona Autenticação JWT (Vamos configurar na Fatia 1)
-        // services.AddAuthentication(...) 
+                    ValidateAudience = true,
+                    ValidAudience = configuration["JwtSettings:Audience"],
+
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(configuration["JwtSettings:Key"]!)),
+
+                    ValidateLifetime = true
+                };
+            });
 
         return services;
     }
