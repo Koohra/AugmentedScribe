@@ -4,13 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AugmentedScribe.Infrastructure.Persistence;
 
-public sealed class ScribeDbContext : IdentityDbContext<IdentityUser>
+public sealed class ScribeDbContext(DbContextOptions<ScribeDbContext> options)
+    : IdentityDbContext<IdentityUser>(options)
 {
-    public ScribeDbContext(DbContextOptions<ScribeDbContext> options)
-        : base(options)
-    {
-    }
-    
     // descomentar estas linhas nas Fatias 2 e 3,
     // quando criarmos as entidades no projeto Domain.
     // public DbSet<Campaign> Campaigns { get; set; }
@@ -19,6 +15,5 @@ public sealed class ScribeDbContext : IdentityDbContext<IdentityUser>
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        
     }
 }

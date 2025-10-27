@@ -1,5 +1,6 @@
 using AugmentedScribe.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
+using Scalar.AspNetCore;
 
 namespace AugmentedScribe;
 
@@ -11,7 +12,7 @@ public static class DependencyInjection
     {
         services.AddControllers();
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen(); // (Vamos configurar o Swagger para JWT depois)
+        services.AddOpenApi(); // (Vamos configurar o Swagger para JWT depois)
         
         services.AddIdentity<IdentityUser, IdentityRole>(options =>
             {

@@ -18,4 +18,9 @@
       <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\AugmentedScribe.Application\AugmentedScribe.Application.csproj" />
+      <ProjectReference Include="..\AugmentedScribe.Domain\AugmentedScribe.Domain.csproj" />
+    </ItemGroup>
+
 </Project>
