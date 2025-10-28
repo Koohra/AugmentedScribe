@@ -10,4 +10,8 @@
       <PackageReference Include="MediatR" Version="13.1.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\AugmentedScribe.Domain\AugmentedScribe.Domain.csproj" />
+    </ItemGroup>
+
 </Project>

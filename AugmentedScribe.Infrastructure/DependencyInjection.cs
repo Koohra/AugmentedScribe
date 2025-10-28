@@ -1,5 +1,6 @@
 ﻿using AugmentedScribe.Application.Common.Interfaces;
 using AugmentedScribe.Infrastructure.Persistence;
+using AugmentedScribe.Infrastructure.Repositories;
 using AugmentedScribe.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -18,22 +19,12 @@ public static class DependencyInjection
         services.AddDbContext<ScribeDbContext>(options =>
             options.UseNpgsql(connectionString, b =>
                 b.MigrationsAssembly("AugmentedScribe.Infrastructure")));
-
-        services.AddIdentity<IdentityUser, IdentityRole>(options =>
-            {
-                options.Password.RequireDigit = false;
-                options.Password.RequiredLength = 6;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = false;
-                options.Password.RequireLowercase = false;
-                options.SignIn.RequireConfirmedAccount = false;
-            })
-            .AddEntityFrameworkStores<ScribeDbContext>()
-            .AddDefaultTokenProviders();
+        
 
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IAuthServices, AuthService>();
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;
     }
