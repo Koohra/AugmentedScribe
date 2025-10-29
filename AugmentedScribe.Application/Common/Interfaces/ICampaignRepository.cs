@@ -7,4 +7,5 @@ public interface ICampaignRepository
     void AddCampaign(Campaign campaign);
     
     Task<IEnumerable<Campaign>> GetCampaignsByUserIdAsync(string userId);
+    Task<Campaign?> GetCampaignByIdAsync(Guid campaignId);
 }

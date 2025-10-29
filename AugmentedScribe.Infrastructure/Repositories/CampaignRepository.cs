@@ -21,4 +21,9 @@ public sealed class CampaignRepository(ScribeDbContext context) : ICampaignRepos
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
     }
+
+    public async Task<Campaign?> GetCampaignByIdAsync(Guid campaignId)
+    {
+        return await _context.Campaigns.FindAsync(campaignId);
+    }
 }
