@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using AugmentedScribe.Application.Features.Books.Commands.UploadBook;
+using AugmentedScribe.Application.Features.Books.Queries.GetBooksByCampaign;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,8 @@ public sealed class BooksController(IMediator mediator) : ControllerBase
         {
             var command = new UploadBookCommand(campaignId, file);
             var bookDto = await _mediator.Send(command);
-            return CreatedAtAction(nameof(UploadBook), new { campaignId = bookDto.CampaignId, id = bookDto.Id }, bookDto);
+            return CreatedAtAction(nameof(UploadBook), new { campaignId = bookDto.CampaignId, id = bookDto.Id },
+                bookDto);
         }
         catch (ValidationException ex)
         {
@@ -29,7 +31,31 @@ public sealed class BooksController(IMediator mediator) : ControllerBase
             {
                 return NotFound(new { message = ex.Message });
             }
+
             return BadRequest(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { message = "An internal error occured while upload a book." });
+        }
+    }
+
+    [HttpGet("{campaignId:guid}")]
+    public async Task<IActionResult> GetBook([FromRoute] Guid campaignId)
+    {
+        try
+        {
+            var query = new GetBooksByCampaignQuery(campaignId);
+            var books = await _mediator.Send(query);
+            return Ok(books);
+        }
+        catch (ValidationException ex)
+        {
+            return NotFound(new { message = ex.Message });
         }
         catch (UnauthorizedAccessException ex)
         {
