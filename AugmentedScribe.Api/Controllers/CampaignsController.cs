@@ -102,4 +102,27 @@ public sealed class CampaignsController(IMediator mediator) : ControllerBase
             return StatusCode(500, new { message = "An internal error occured while updating the campaign." });
         }
     }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> DeleteCampaign([FromRoute] Guid id)
+    {
+        try
+        {
+            var command = new DeleteCampaignCommand(id);
+            await _mediator.Send(command);
+            return NoContent();
+        }
+        catch (ValidationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { message = "An internal error occured while deleting the campaign." });
+        }
+    }
 }
