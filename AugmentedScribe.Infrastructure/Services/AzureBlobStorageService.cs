@@ -11,17 +11,17 @@ public sealed class AzureBlobStorageService : IFileStorageService
 
     public AzureBlobStorageService(IConfiguration configuration)
     {
-        var connectionString = configuration["AzureBlobStorage:ConnectionString"]
+        var connectionString = configuration["AzureStorage:ConnectionString"]
                                ?? throw new InvalidOperationException(
                                    "AzureStorage:ConnectionString is not configured in appsettings.Development.json");
-        var containerName = configuration["AzureBlobStorage:ContainerName"] ??
+        var containerName = configuration["AzureStorage:ContainerName"] ??
                             throw new InvalidOperationException(
                                 "AzureStorage:ContainerName is not configured in appsettings.Development.json");
 
         var blobServiceClient = new BlobServiceClient(connectionString);
 
         _containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-        _containerClient.CreateIfNotExists(PublicAccessType.Blob);
+        _containerClient.CreateIfNotExists();
     }
 
     public async Task<string> UploadFileAsync(Stream fileStream, string blobName,
