@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using AugmentedScribe.Application.Features.Books.Commands.DeleteBook;
 using AugmentedScribe.Application.Features.Books.Commands.UploadBook;
 using AugmentedScribe.Application.Features.Books.Queries.GetBooksByCampaign;
 using MediatR;
@@ -64,6 +65,29 @@ public sealed class BooksController(IMediator mediator) : ControllerBase
         catch (Exception)
         {
             return StatusCode(500, new { message = "An internal error occured while upload a book." });
+        }
+    }
+
+    [HttpDelete("{campaignId:guid},{bookId:guid}")]
+    public async Task<IActionResult> DeleteBook([FromRoute] Guid campaignId, [FromRoute] Guid bookId)
+    {
+        try
+        {
+            var command = new DeleteBookCommand(campaignId, bookId);
+            await _mediator.Send(command);
+            return NoContent();
+        }
+        catch (ValidationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { message = "An internal error occured while deleting the book." });
         }
     }
 }

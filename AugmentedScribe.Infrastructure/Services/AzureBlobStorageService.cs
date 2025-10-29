@@ -31,4 +31,10 @@ public sealed class AzureBlobStorageService : IFileStorageService
         await blobClient.UploadAsync(fileStream, overwrite: true, cancellationToken: cancellationToken);
         return blobClient.Uri.ToString();
     }
+
+    public async Task DeleteFileAsync(string blobName, CancellationToken cancellationToken = default)
+    {
+        var blobClient = _containerClient.GetBlobClient(blobName);
+        await blobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.None, null, cancellationToken);
+    }
 }
