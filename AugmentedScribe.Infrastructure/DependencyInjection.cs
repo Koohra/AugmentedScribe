@@ -19,12 +19,12 @@ public static class DependencyInjection
         services.AddDbContext<ScribeDbContext>(options =>
             options.UseNpgsql(connectionString, b =>
                 b.MigrationsAssembly("AugmentedScribe.Infrastructure")));
-        
 
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IAuthServices, AuthService>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IFileStorageService, AzureBlobStorageService>();
 
         return services;
     }
