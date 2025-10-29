@@ -14,6 +14,11 @@ public sealed class CampaignRepository(ScribeDbContext context) : ICampaignRepos
         _context.Campaigns.Add(campaign);
     }
 
+    public void DeleteCampaign(Campaign campaign)
+    {
+        _context.Campaigns.Remove(campaign);
+    }
+
     public async Task<IEnumerable<Campaign>> GetCampaignsByUserIdAsync(string userId)
     {
         return await _context.Campaigns
