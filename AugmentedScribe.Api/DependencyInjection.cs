@@ -17,6 +17,17 @@ public static class DependencyInjection
     {
         services.AddControllers();
         services.AddEndpointsApiExplorer();
+        services.AddScalarConfiguration();
+        services.AddIdentityConfiguration();
+        services.AddJwtAuthentication(configuration);
+        services.AddCorsConfiguration(configuration);
+        services.AddCurrentUserService();
+
+        return services;
+    }
+
+    private static IServiceCollection AddScalarConfiguration(this IServiceCollection services)
+    {
         services.AddOpenApi(options =>
         {
             var securityScheme = new OpenApiSecurityScheme
@@ -32,9 +43,9 @@ public static class DependencyInjection
             options.AddDocumentTransformer(async (document, context, cancellationToken) =>
             {
                 document.Components ??= new OpenApiComponents();
-                
+
                 document.Components.SecuritySchemes.TryAdd("Bearer", securityScheme);
-                
+
                 document.SecurityRequirements ??= new List<OpenApiSecurityRequirement>();
                 document.SecurityRequirements.Add(new OpenApiSecurityRequirement
                 {
@@ -47,15 +58,19 @@ public static class DependencyInjection
                                 Id = "Bearer"
                             }
                         },
-                        
                         Array.Empty<string>()
                     }
                 });
-                
+
                 await Task.CompletedTask;
             });
         });
-        
+
+        return services;
+    }
+
+    private static IServiceCollection AddIdentityConfiguration(this IServiceCollection services)
+    {
         services.AddIdentity<IdentityUser, IdentityRole>(options =>
             {
                 options.Password.RequireDigit = false;
@@ -64,20 +79,30 @@ public static class DependencyInjection
                 options.Password.RequireUppercase = false;
                 options.Password.RequireLowercase = false;
                 options.SignIn.RequireConfirmedAccount = false;
+                options.SignIn.RequireConfirmedEmail = false;
+                options.User.RequireUniqueEmail = true;
             })
             .AddEntityFrameworkStores<ScribeDbContext>()
             .AddDefaultTokenProviders();
 
-        // 3. Adiciona o CORS (Permitindo o React)
-        services.AddCors(options =>
-        {
-            options.AddPolicy("AllowReactApp", policy =>
-            {
-                policy.WithOrigins("http://localhost:3000") // URL React
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
-            });
-        });
+        return services;
+    }
+
+    private static IServiceCollection AddJwtAuthentication(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var jwtSecret = configuration["JwtSettings:Secret"]
+                        ?? throw new InvalidOperationException(
+                            "JWT Secret is not configured in appsettings.Development.json");
+
+        var jwtIssuer = configuration["JwtSettings:Issuer"]
+                        ?? throw new InvalidOperationException(
+                            "JWT Issuer is not configured in appsettings.Development.json");
+
+        var jwtAudience = configuration["JwtSettings:Audience"]
+                          ?? throw new InvalidOperationException(
+                              "JWT Audience is not configured in appsettings.Development.json");
 
         services.AddAuthentication(options =>
             {
@@ -89,19 +114,45 @@ public static class DependencyInjection
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
-                    ValidIssuer = configuration["JwtSettings:Issuer"],
+                    ValidIssuer = jwtIssuer,
 
                     ValidateAudience = true,
-                    ValidAudience = configuration["JwtSettings:Audience"],
+                    ValidAudience = jwtAudience,
 
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(configuration["JwtSettings:Secret"]!)),
+                        Encoding.UTF8.GetBytes(jwtSecret)),
 
-                    ValidateLifetime = true
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
                 };
             });
+        return services;
+    }
 
+    private static IServiceCollection AddCorsConfiguration(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowReactApp", policy =>
+            {
+                var allowedOrigins = configuration.GetSection("AllowedOrigins").Get<string[]>()
+                                     ?? ["http://localhost:3000"];
+
+                policy.WithOrigins(allowedOrigins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+        });
+
+        return services;
+    }
+
+    private static IServiceCollection AddCurrentUserService(this IServiceCollection services)
+    {
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
