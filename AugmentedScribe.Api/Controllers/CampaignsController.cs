@@ -56,4 +56,27 @@ public sealed class CampaignsController(IMediator mediator) : ControllerBase
             return StatusCode(500, new { message = "Error internal" });
         }
     }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetCampaign([FromRoute] Guid id)
+    {
+        try
+        {
+            var query = new GetCampaignByIdQuery(id);
+            var campaignDto = await _mediator.Send(query);
+            return Ok(campaignDto);
+        }
+        catch(ValidationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { message = "An internal error occured while fetching the campaign." });
+        }
+    }
 }
