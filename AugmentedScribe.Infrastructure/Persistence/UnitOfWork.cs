@@ -8,11 +8,13 @@ public sealed class UnitOfWork : IUnitOfWork
     private readonly ScribeDbContext _context;
 
     public ICampaignRepository Campaigns { get; }
+    public IBookRepository Books { get; }
 
     public UnitOfWork(ScribeDbContext context)
     {
         _context = context;
         Campaigns = new CampaignRepository(_context);
+        Books = new BookRepository(_context);
     }
 
 
