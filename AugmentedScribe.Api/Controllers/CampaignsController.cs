@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using AugmentedScribe.Application.Features.Campaigns.Commands;
 using AugmentedScribe.Application.Features.Campaigns.Dtos;
+using AugmentedScribe.Application.Features.Campaigns.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +31,25 @@ public sealed class CampaignsController(IMediator mediator) : ControllerBase
         catch (ValidationException ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { message = "Error internal" });
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetCampaigns()
+    {
+        try
+        {
+            var query = new GetCampaignQuery();
+            var campaignDtos = await _mediator.Send(query);
+            return Ok(campaignDtos);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
         }
         catch (Exception)
         {
