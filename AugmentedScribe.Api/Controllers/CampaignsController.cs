@@ -66,7 +66,7 @@ public sealed class CampaignsController(IMediator mediator) : ControllerBase
             var campaignDto = await _mediator.Send(query);
             return Ok(campaignDto);
         }
-        catch(ValidationException ex)
+        catch (ValidationException ex)
         {
             return NotFound(new { message = ex.Message });
         }
@@ -77,6 +77,29 @@ public sealed class CampaignsController(IMediator mediator) : ControllerBase
         catch (Exception)
         {
             return StatusCode(500, new { message = "An internal error occured while fetching the campaign." });
+        }
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateCampaign([FromRoute] Guid id, [FromBody] UpdateCampaignRequest request)
+    {
+        try
+        {
+            var command = new UpdateCampaignCommand(id, request.Name, request.Description, request.System);
+            await _mediator.Send(command);
+            return NoContent();
+        }
+        catch (ValidationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { message = "An internal error occured while updating the campaign." });
         }
     }
 }
