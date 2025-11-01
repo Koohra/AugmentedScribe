@@ -8,10 +8,12 @@
 
     <ItemGroup>
       <PackageReference Include="Azure.Storage.Blobs" Version="12.26.0" />
+      <PackageReference Include="MassTransit" Version="8.5.5" />
       <PackageReference Include="MediatR" Version="13.1.0" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\AugmentedScribe.Contracts\AugmentedScribe.Contracts.csproj" />
       <ProjectReference Include="..\AugmentedScribe.Domain\AugmentedScribe.Domain.csproj" />
     </ItemGroup>
 

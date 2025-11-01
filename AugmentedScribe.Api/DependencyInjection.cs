@@ -1,11 +1,13 @@
 using System.Text;
 using AugmentedScribe.Application.Common.Interfaces;
+using AugmentedScribe.Infrastructure.Messaging.Consumers;
 using AugmentedScribe.Infrastructure.Persistence;
 using AugmentedScribe.Services;
+using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace AugmentedScribe;
 
@@ -21,8 +23,37 @@ public static class DependencyInjection
         services.AddIdentityConfiguration();
         services.AddJwtAuthentication(configuration);
         services.AddCorsConfiguration(configuration);
+        services.AddMassTransitConfiguration(configuration);
         services.AddCurrentUserService();
 
+        return services;
+    }
+
+    private static IServiceCollection AddMassTransitConfiguration(this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var rabbitMqSettings = configuration.GetSection("RabbitMq");
+        var host = rabbitMqSettings["Host"] ?? throw new InvalidOperationException("RabbitMq:Host not configured");
+        var userName = rabbitMqSettings["UserName"] ?? "guest";
+        var password = rabbitMqSettings["Password"] ?? "guest";
+
+        services.AddMassTransit(x =>
+        {
+            x.SetKebabCaseEndpointNameFormatter();
+            x.AddConsumers(typeof(BookProcessingConsumer).Assembly);
+
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                cfg.Host(host, "/", h =>
+                {
+                    h.Username(userName);
+                    h.Password(password);
+                });
+
+                cfg.ReceiveEndpoint("book-processing",
+                    e => { e.ConfigureConsumer<BookProcessingConsumer>(context); });
+            });
+        });
         return services;
     }
 
@@ -30,44 +61,53 @@ public static class DependencyInjection
     {
         services.AddOpenApi(options =>
         {
-            var securityScheme = new OpenApiSecurityScheme
-            {
-                Name = "Authorization",
-                Description = "JWT Authorization header using the Bearer scheme.",
-                In = ParameterLocation.Header,
-                Type = SecuritySchemeType.Http,
-                Scheme = "bearer",
-                BearerFormat = "JWT"
-            };
-
-            options.AddDocumentTransformer(async (document, context, cancellationToken) =>
+            options.AddDocumentTransformer((document, context, cancellationToken) =>
             {
                 document.Components ??= new OpenApiComponents();
 
-                document.Components.SecuritySchemes.TryAdd("Bearer", securityScheme);
+                document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
 
-                document.SecurityRequirements ??= new List<OpenApiSecurityRequirement>();
-                document.SecurityRequirements.Add(new OpenApiSecurityRequirement
+                var securityScheme = new OpenApiSecurityScheme
                 {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        },
-                        Array.Empty<string>()
-                    }
-                });
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "Enter JWT Bearer token"
+                };
 
-                await Task.CompletedTask;
+                document.Components.SecuritySchemes["Bearer"] = securityScheme;
+
+                return Task.CompletedTask;
+            });
+            options.AddOperationTransformer((operation, context, cancellationToken) =>
+            {
+                var metadata = context.Description.ActionDescriptor.EndpointMetadata;
+                var hasAuthorize = metadata.Any(m => m is Microsoft.AspNetCore.Authorization.AuthorizeAttribute);
+                var hasAllowAnonymous =
+                    metadata.Any(m => m is Microsoft.AspNetCore.Authorization.AllowAnonymousAttribute);
+
+                if (!hasAuthorize || hasAllowAnonymous)
+                {
+                    return Task.CompletedTask;
+                }
+
+                var schemeRef = new OpenApiSecuritySchemeReference("Bearer", context.Document);
+                var requirement = new OpenApiSecurityRequirement
+                {
+                    [schemeRef] = []
+                };
+
+                operation.Security ??= new List<OpenApiSecurityRequirement>();
+                operation.Security.Add(requirement);
+
+                return Task.CompletedTask;
             });
         });
 
         return services;
     }
+
 
     private static IServiceCollection AddIdentityConfiguration(this IServiceCollection services)
     {

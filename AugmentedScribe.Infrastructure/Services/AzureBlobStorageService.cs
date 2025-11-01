@@ -37,4 +37,18 @@ public sealed class AzureBlobStorageService : IFileStorageService
         var blobClient = _containerClient.GetBlobClient(blobName);
         await blobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.None, null, cancellationToken);
     }
+
+    public async Task<Stream> DownloadFileAsync(string blobName, CancellationToken cancellationToken = default)
+    {
+        var blobClient = _containerClient.GetBlobClient(blobName);
+        if (!await blobClient.ExistsAsync(cancellationToken))
+        {
+            throw new FileNotFoundException("Blob not found", blobName);
+        }
+
+        var stream = new MemoryStream();
+        await blobClient.DownloadToAsync(stream, cancellationToken);
+        stream.Position = 0;
+        return stream;
+    }
 }
