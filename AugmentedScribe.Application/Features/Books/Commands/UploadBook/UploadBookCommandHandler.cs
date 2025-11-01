@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
 using AugmentedScribe.Application.Common.Interfaces;
 using AugmentedScribe.Application.Features.Books.Dtos;
+using AugmentedScribe.Contracts;
 using AugmentedScribe.Domain.Entities;
-using AugmentedScribe.Domain.Enums;
+using MassTransit;
 using MediatR;
 
 namespace AugmentedScribe.Application.Features.Books.Commands.UploadBook;
@@ -10,7 +11,8 @@ namespace AugmentedScribe.Application.Features.Books.Commands.UploadBook;
 public sealed class UploadBookCommandHandler(
     ICurrentUserService currentUserService,
     IFileStorageService fileStorageService,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    IPublishEndpoint publishEndpoint)
     : IRequestHandler<UploadBookCommand, BookDto>
 {
     private readonly ICurrentUserService _currentUserService =
@@ -20,6 +22,9 @@ public sealed class UploadBookCommandHandler(
         fileStorageService ?? throw new ArgumentNullException(nameof(fileStorageService));
 
     private readonly IUnitOfWork _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+
+    private readonly IPublishEndpoint _publishEndpoint =
+        publishEndpoint ?? throw new ArgumentNullException(nameof(publishEndpoint));
 
     public async Task<BookDto> Handle(UploadBookCommand command, CancellationToken cancellationToken)
     {
@@ -63,13 +68,17 @@ public sealed class UploadBookCommandHandler(
             Id = Guid.NewGuid(),
             FileName = command.File.FileName,
             StorageUrl = fileUrl,
-            Status = BookStatus.Pending,
             UploadedAt = DateTime.UtcNow,
             CampaignId = command.CampaignId,
         };
 
         _unitOfWork.Books.Add(newBook);
         await _unitOfWork.CompleteAsync(cancellationToken);
+
+        await _publishEndpoint.Publish(new BookUploadedEvent(
+            newBook.Id,
+            newBook.CampaignId,
+            newBook.StorageUrl), cancellationToken);
 
         return new BookDto
         {

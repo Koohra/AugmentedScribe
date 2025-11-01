@@ -1,8 +1,8 @@
 ﻿using AugmentedScribe.Application.Common.Interfaces;
+using AugmentedScribe.Infrastructure.Messaging.Consumers;
 using AugmentedScribe.Infrastructure.Persistence;
-using AugmentedScribe.Infrastructure.Repositories;
 using AugmentedScribe.Infrastructure.Services;
-using Microsoft.AspNetCore.Identity;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,7 +25,15 @@ public static class DependencyInjection
         services.AddScoped<IAuthServices, AuthService>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IFileStorageService, AzureBlobStorageService>();
+        services.AddScoped<IPdfTextExtractor, PdfTextExtractorService>();
+        services.AddMassTransitConsumers();
 
+        return services;
+    }
+
+    private static IServiceCollection AddMassTransitConsumers(this IServiceCollection services)
+    {
+        services.AddScoped<BookProcessingConsumer>();
         return services;
     }
 }

@@ -1,6 +1,4 @@
-﻿version: '3.8'
-
-services:
+﻿services:
   postgres-db:
     image: postgres:16
     container_name: scribe-postgres-db
@@ -34,7 +32,18 @@ services:
     volumes:
       - chroma_data:/chroma/chroma
     restart: unless-stopped
+  
+  rabbitmq:
+    image: rabbitmq:management-alpine
+    container_name: scribe-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
 
 volumes:
   postgres-data: { }
   chroma_data: { }
+  rabbitmq_data: { }
