@@ -11,7 +11,8 @@ public sealed class BookProcessingConsumer(
     ILogger<BookProcessingConsumer> logger,
     IUnitOfWork unitOfWork,
     IFileStorageService fileStorageService,
-    IPdfTextExtractor pdfTextExtractor) : IConsumer<BookUploadedEvent>
+    IPdfTextExtractor pdfTextExtractor,
+    IRagService ragService) : IConsumer<BookUploadedEvent>
 {
     private readonly ILogger<BookProcessingConsumer>
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -23,6 +24,8 @@ public sealed class BookProcessingConsumer(
 
     private readonly IPdfTextExtractor _pdfTextExtractor =
         pdfTextExtractor ?? throw new ArgumentNullException(nameof(pdfTextExtractor));
+
+    private readonly IRagService _ragService = ragService ?? throw new ArgumentNullException(nameof(ragService));
 
     public async Task Consume(ConsumeContext<BookUploadedEvent> context)
     {
@@ -58,7 +61,7 @@ public sealed class BookProcessingConsumer(
             var text = await _pdfTextExtractor.ExtractTextAsync(stream);
             _logger.LogInformation("Text extracted from PDF for Book {BookId}. Length: {Length}", book.Id, text.Length);
 
-            //Pipeline RAG...
+            await _ragService.GenerateEmbeddingsAsync(book, text, context.CancellationToken);
 
             book.MarkAsCompleted();
             _logger.LogInformation("Book {BookId} status updated to Completed.", book.Id);
