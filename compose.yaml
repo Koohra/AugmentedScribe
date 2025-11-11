@@ -25,7 +25,7 @@
     restart: unless-stopped
   
   chromadb:
-    image: chromadb/chroma
+    image: chromadb/chroma:0.4.24
     container_name: augmented_scribe_chroma
     ports:
       - "8000:8000"

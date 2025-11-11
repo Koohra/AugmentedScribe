@@ -27,6 +27,7 @@ public static class DependencyInjection
         services.AddScoped<IFileStorageService, AzureBlobStorageService>();
         services.AddScoped<IPdfTextExtractor, PdfTextExtractorService>();
         services.AddScoped<IRagService, RagService>();
+        services.AddScoped<IChatService, ChatService>();
         services.AddMassTransitConsumers();
 
         return services;
