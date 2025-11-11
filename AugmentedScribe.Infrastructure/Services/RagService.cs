@@ -6,8 +6,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.Chroma;
-using Microsoft.SemanticKernel.Memory;
 using Microsoft.SemanticKernel.Text;
+using Microsoft.SemanticKernel.Memory;
 
 namespace AugmentedScribe.Infrastructure.Services;
 
@@ -113,8 +113,7 @@ public sealed class RagService : IRagService
 #pragma warning disable SKEXP0001
         var memory = new SemanticTextMemory(
             memoryStore,
-            kernel.GetRequiredService<IEmbeddingGenerator>()
-                as IEmbeddingGenerator<string, Embedding<float>>);
+            kernel.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>());
 #pragma warning restore SKEXP0001
 
         return memory;
