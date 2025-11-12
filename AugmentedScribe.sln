@@ -23,6 +23,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastru
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AugmentedScribe.Contracts", "AugmentedScribe.Contracts\AugmentedScribe.Contracts.csproj", "{6BC6B3E6-02BC-42D5-8F70-685CE355FE08}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{4822EFC7-E5BD-4C11-93AE-DE3EDA61BC2F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AugmentedScribe.Application.UnitTests", "AugmentedScribe.Application.UnitTests\AugmentedScribe.Application.UnitTests.csproj", "{10546199-4FDE-4F2C-B0EB-42D0ACCF72A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +53,10 @@ Global
 		{6BC6B3E6-02BC-42D5-8F70-685CE355FE08}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6BC6B3E6-02BC-42D5-8F70-685CE355FE08}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6BC6B3E6-02BC-42D5-8F70-685CE355FE08}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10546199-4FDE-4F2C-B0EB-42D0ACCF72A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10546199-4FDE-4F2C-B0EB-42D0ACCF72A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10546199-4FDE-4F2C-B0EB-42D0ACCF72A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10546199-4FDE-4F2C-B0EB-42D0ACCF72A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{47F88B32-218C-4285-A8DF-FAB82BC7146B} = {0B6DA330-0F4D-44AF-B535-64DE1B2813BD}
@@ -59,5 +67,6 @@ Global
 		{5FB2ADF0-C6FA-4CFD-A2DA-CD3C5702DA22} = {63CBAB32-D03C-419B-BDAE-A6432DACE258}
 		{C498C2C7-4117-4290-9603-4DCE3DE98836} = {47F88B32-218C-4285-A8DF-FAB82BC7146B}
 		{6BC6B3E6-02BC-42D5-8F70-685CE355FE08} = {47F88B32-218C-4285-A8DF-FAB82BC7146B}
+		{10546199-4FDE-4F2C-B0EB-42D0ACCF72A9} = {4822EFC7-E5BD-4C11-93AE-DE3EDA61BC2F}
 	EndGlobalSection
 EndGlobal
