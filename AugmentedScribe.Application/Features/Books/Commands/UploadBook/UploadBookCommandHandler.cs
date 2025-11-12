@@ -3,6 +3,7 @@ using AugmentedScribe.Application.Common.Interfaces;
 using AugmentedScribe.Application.Features.Books.Dtos;
 using AugmentedScribe.Contracts;
 using AugmentedScribe.Domain.Entities;
+using AugmentedScribe.Domain.Exceptions;
 using MassTransit;
 using MediatR;
 
@@ -47,7 +48,7 @@ public sealed class UploadBookCommandHandler(
         var campaign = await _unitOfWork.Campaigns.GetCampaignByIdAsync(command.CampaignId);
         if (campaign is null)
         {
-            throw new ValidationException("Campaign not found");
+            throw new NotFoundException(nameof(campaign), command.CampaignId);
         }
 
         if (campaign.UserId != userId)

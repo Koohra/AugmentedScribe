@@ -1,6 +1,7 @@
 using AugmentedScribe; 
 using AugmentedScribe.Application;
 using AugmentedScribe.Infrastructure;
+using AugmentedScribe.Middleware;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,8 @@ builder.Services
     .AddPresentationServices(builder.Configuration);
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
