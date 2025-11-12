@@ -1,6 +1,6 @@
-using System.ComponentModel.DataAnnotations;
 using AugmentedScribe.Application.Common.Interfaces;
 using AugmentedScribe.Application.Features.Chat.Dtos;
+using AugmentedScribe.Domain.Exceptions;
 using MediatR;
 
 namespace AugmentedScribe.Application.Features.Chat.Commands;
@@ -31,7 +31,7 @@ public sealed class SendChatPromptCommandHandler(
         var campaign = await _unitOfWork.Campaigns.GetCampaignByIdAsync(command.CampaignId);
         if (campaign is null)
         {
-            throw new ValidationException("Campaign not found.");
+            throw new NotFoundException(nameof(campaign), command.CampaignId);
         }
 
         if (campaign.UserId != userId)
