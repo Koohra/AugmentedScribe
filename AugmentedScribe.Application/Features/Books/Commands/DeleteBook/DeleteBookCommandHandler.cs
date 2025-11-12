@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using AugmentedScribe.Application.Common.Interfaces;
+using AugmentedScribe.Domain.Exceptions;
 using Azure.Storage.Blobs;
 using MediatR;
 
@@ -30,7 +31,7 @@ public sealed class DeleteBookCommandHandler(
         var campaign = await _unitOfWork.Campaigns.GetCampaignByIdAsync(command.CampaignId);
         if (campaign is null)
         {
-            throw new ValidationException("Campaign not found");
+            throw new NotFoundException(nameof(campaign), command.CampaignId);
         }
 
         if (campaign.UserId != userId)
@@ -41,7 +42,7 @@ public sealed class DeleteBookCommandHandler(
         var book = await _unitOfWork.Books.GetBookByIdAsync(command.BookId, cancellationToken);
         if (book is null)
         {
-            throw new ValidationException("Book not found");
+            throw new NotFoundException(nameof(book), command.BookId);
         }
 
         if (book.CampaignId != command.CampaignId)
