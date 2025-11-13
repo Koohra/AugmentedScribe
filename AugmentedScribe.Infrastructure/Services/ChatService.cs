@@ -8,6 +8,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.Chroma;
 using Microsoft.SemanticKernel.Memory;
+using Polly;
+using Polly.Retry;
 
 namespace AugmentedScribe.Infrastructure.Services;
 
@@ -19,6 +21,7 @@ public sealed class ChatService : IChatService
     private readonly string _embeddingModelId;
     private readonly string _chatModelId;
     private readonly string _chromaDbEndpoint;
+    private readonly AsyncRetryPolicy _retryPolicy;
 
     public ChatService(ILogger<ChatService> logger,
         IConfiguration configuration,
@@ -38,6 +41,24 @@ public sealed class ChatService : IChatService
                           throw new InvalidOperationException("ChromaDb:Url is not configured.");
         var chromaDbPort = configuration["ChromaDb:Port"] ?? "8000";
         _chromaDbEndpoint = $"{chromaDbUrl}:{chromaDbPort}";
+
+        _retryPolicy = Policy
+            .Handle<HttpRequestException>()
+            .Or<InvalidOperationException>(ex =>
+                ex.InnerException is HttpRequestException ||
+                ex.Message.Contains("503") ||
+                ex.Message.Contains("Service Unavailable") ||
+                ex.Message.Contains("429") ||
+                ex.Message.Contains("Too Many Requests"))
+            .WaitAndRetryAsync(
+                retryCount: 3,
+                sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                onRetry: (exception, timeSpan, retryCount, context) =>
+                {
+                    _logger.LogWarning(
+                        "Retry {RetryCount} após {Delay}s devido a: {Error}",
+                        retryCount, timeSpan.TotalSeconds, exception.Message);
+                });
     }
 
     public async Task<string> GenerateResponseAsync(
@@ -85,10 +106,12 @@ public sealed class ChatService : IChatService
 
             _logger.LogInformation("Invoking Gemini chat model for CampaignId: {CampaignId}", campaign.Id);
 
-            var kernelResult = await kernel.InvokeAsync(
-                chatFunction,
-                new KernelArguments { { "prompt", prompt } },
-                cancellationToken);
+            var kernelResult = await _retryPolicy.ExecuteAsync(() =>
+                kernel.InvokeAsync(
+                    chatFunction,
+                    new KernelArguments { { "prompt", prompt } },
+                    cancellationToken)
+            );
 
             var response = kernelResult.GetValue<string>()
                            ?? "Sorry, I encountered an error generating a response.";
@@ -143,6 +166,7 @@ public sealed class ChatService : IChatService
         return $$"""
                  You are an expert assistant for the RPG system: {{campaign.System}}.
                  Your name is "Augmented Scribe".
+                 You must answer initially with your presentation in the first sentence. 
                  You must answer the user's questions based ONLY on the context provided below.
                  If the answer is not found in the context, you MUST state: "I could not find information about that in the uploaded books."
                  Do not use any external knowledge.
